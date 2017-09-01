@@ -11,3 +11,19 @@ errors under that transaction. They show up just like any other reported
 errors. If any fields are supplied to the log line via `WithFields`, they are
 reported as custom attributes on the `errorTxn` and will be visible in New
 Relic.
+
+Usage
+-----
+
+You can install this like any other logrus hook. Assuming that `application`
+is your `newrelic.Application` from the Go agent, you can "hook" it up like
+this:
+
+```
+log.AddHook(
+	newrelic_logrus.NewNewRelicLogrusHook(
+		application,
+		[]log.Level{log.ErrorLevel, log.FatalLevel},
+	),
+)
+```
