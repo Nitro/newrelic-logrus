@@ -5,12 +5,20 @@ This is a simple logrus hook that lets existing logrus applications hook into
 New Relic error reporting using the New Relic Go Agent.
 
 New Relic relies on having errors associated witha transaction. But logrus
-doesn't know which transaction its being called from. So currently this hook
-plugin just creates a new transaction called `errorTxn` and reports logged
-errors under that transaction. They show up just like any other reported
-errors. If any fields are supplied to the log line via `WithFields`, they are
-reported as custom attributes on the `errorTxn` and will be visible in New
-Relic.
+doesn't know which transaction its being called from. So, you have two
+options:
+ * Pass nothing and a new New Relic transaction will be created and the
+   error associatied with that.
+ * Use `WithFields(logrus.Fields{"txn": tx}).Error(...)` and pass in
+   your existing transaction. This will be used instead.
+
+If you use the second strategy, you should also use the included `Formatter` to
+remove the `txn` field from the logs. The `Formatter` can also masque any
+fields you wish to prevent from being logged in the clear.
+
+In either case, if any fields are supplied to the log line via `WithFields`,
+they are reported as custom attributes on the `errorTxn` and will be visible in
+New Relic.
 
 Usage
 -----
@@ -26,4 +34,13 @@ log.AddHook(
 		[]log.Level{log.ErrorLevel, log.FatalLevel},
 	),
 )
+```
+
+The following will enable filtered `txn` from your logs, and will also allow
+filtering of any fields entitled `password`. You may specify any underlying
+logrus formatter you like. In this case we use the normal `TextFormatter`.
+
+```
+formatter := NewFormatter([]string{"password"}, &log.TextFormatter{})
+log.SetFormatter(formatter)
 ```
